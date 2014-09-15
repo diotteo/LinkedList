@@ -1,7 +1,7 @@
 LinkedList
 ==========
 
-My own mostly ANSI C LinkedList implementation
+My own ANSI C LinkedList implementation
 
 I created this not because it is particularly good or particularly innovative,
 but because I couldn't find an already existing one that:

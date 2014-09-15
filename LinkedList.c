@@ -69,7 +69,11 @@ destroyNode(nodeDestroyFunc f_destroyNode, struct Node **p_node) {
 	int destroyCode;
 	struct Node *node;
 
-	assert(p_node != NULL && *p_node != NULL);
+	/* Not actually a user pointer, just a double pointer to Node this time */
+	if (!isUserPointerValid(p_node)) {
+		return -256;
+	}
+
 	node = *p_node;
 
 	if (f_destroyNode != NULL) {

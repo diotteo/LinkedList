@@ -511,19 +511,73 @@ llistCursor_find(LinkedList *llist, struct Node **cursor, void *data, LlistDirec
 
 
 static void
-swapNodes(struct Node *node1, struct Node *node2) {
-	struct Node *prev, *next;
+swapNodes(LinkedList *llist, struct Node *node1, struct Node *node2) {
+	int b_neighbours;
+	struct Node
+			*prev1,
+			*next1,
+			*prev2,
+			*next2;
 
 	assert(node1 != NULL && node2 != NULL);
 
-	prev = node1->prev;
-	next = node1->next;
+	/* If both nodes are next to each other, make sure
+	 * node1 refers to the first one */
+	if (node1->prev == node2) {
+		struct Node *tmp = node1;
+		node1 = node2;
+		node2 = tmp;
+	}
 
-	node1->prev = node2->prev;
-	node1->next = node2->next;
+	/* Sync test */
+	assert( ! ((node1->next == node2) ^ (node2->prev == node1)));
 
-	node2->prev = prev;
-	node2->next = next;
+
+	prev1 = node1->prev;
+	next1 = node1->next;
+	next2 = node2->next;
+	prev2 = node2->prev;
+
+	b_neighbours = (node1->next == node2);
+
+	if (prev1 != NULL) {
+		prev1->next = node2;
+	}
+	if (next2 != NULL) {
+		next2->prev = node1;
+	}
+
+	if (b_neighbours) {
+		node1->prev = node2;
+		node2->next = node1;
+
+	} else {
+		if (next1 != NULL) {
+			next1->prev = node2;
+		}
+		if (prev2 != NULL) {
+			prev2->next = node1;
+		}
+
+		node1->prev = prev2;
+		node2->next = next1;
+	}
+
+	node2->prev = prev1;
+	node1->next = next2;
+
+
+	if (llist->head == node1) {
+		llist->head = node2;
+	} else if (llist->head == node2) {
+		llist->head = node1;
+	}
+
+	if (llist->tail == node1) {
+		llist->tail = node2;
+	} else if (llist->tail == node2) {
+		llist->tail = node1;
+	}
 }
 
 
@@ -543,7 +597,7 @@ llist_bubbleSort(LinkedList *llist) {
 
 		/* while node is not at the head of the list and prev is "higher" than node */
 		while (prev != NULL && llist->f_cmpNode(prev->data, node->data) > 0) {
-			swapNodes(prev, node);
+			swapNodes(llist, prev, node);
 			assert(prev->prev == node && node->next == prev);
 
 			/* prev is now after node */

@@ -45,6 +45,12 @@ assertList(LinkedList *llist) {
 }
 
 
+static int
+isUserPointerValid(struct Node **cursor) {
+	return (cursor != NULL && *cursor != NULL);
+}
+
+
 static struct Node *
 new_node(void *data) {
 	struct Node *node = malloc(sizeof (*node));
@@ -63,7 +69,11 @@ destroyNode(nodeDestroyFunc f_destroyNode, struct Node **p_node) {
 	int destroyCode;
 	struct Node *node;
 
-	assert(p_node != NULL && *p_node != NULL);
+	/* Not actually a user pointer, just a double pointer to Node this time */
+	if (!isUserPointerValid(p_node)) {
+		return -256;
+	}
+
 	node = *p_node;
 
 	if (f_destroyNode != NULL) {
@@ -72,12 +82,6 @@ destroyNode(nodeDestroyFunc f_destroyNode, struct Node **p_node) {
 	free(node), *p_node = node = NULL;
 
 	return destroyCode;
-}
-
-
-static int
-isUserPointerValid(struct Node **p_node) {
-	return (p_node != NULL && *p_node != NULL);
 }
 
 
@@ -278,11 +282,14 @@ llist_new(nodeDestroyFunc f_destroyNode, nodeCmpFunc f_cmpNode) {
 int
 llist_destroy(LinkedList **p_llist) {
 	struct Node *node;
-	struct Node *next = NULL;
 	int error = 0;
 	LinkedList *llist;
 
-	assertList(llist);
+	if (p_llist == NULL) {
+		return 0;
+	}
+
+	assertList(*p_llist);
 
 	llist = *p_llist;
 	while (llist->head != NULL) {
@@ -334,14 +341,15 @@ llistCursor_isHead(LinkedList *llist, struct Node **cursor) {
 /* Returns 0 on success, negative number on failure */
 int
 llist_insertHead(LinkedList *llist, void *data) {
-	return insertNode(llist, &(llist->head), new_node(data), LLIST_BEFORE);
+
+	return insertHead(llist, new_node(data));
 }
 
 
 /* Returns 0 on success, negative number on failure */
 int
 llist_insertTail(LinkedList *llist, void *data) {
-	return insertNode(llist, &(llist->tail), new_node(data), LLIST_AFTER);
+	return insertTail(llist, new_node(data));
 }
 
 
@@ -360,36 +368,36 @@ llistCursor_insertData(LinkedList *llist, struct Node **cursor, void *data, Llis
 
 /* Caller is responsible of freeing the data returned */
 void *
-llist_popNode(LinkedList *llist, struct Node **p_node) {
+llist_popNode(LinkedList *llist, struct Node **cursor) {
 	void *data;
 	struct Node *node;
 
-	if (!isUserPointerValid(p_node)) {
+	if (!isUserPointerValid(cursor)) {
 		return NULL;
 	}
-	node = *p_node;
+	node = *cursor;
 
 	assert(node == popNode(llist, node));
 
 	data = node->data;
-	destroyNode(NULL, p_node);
+	destroyNode(NULL, cursor);
 	return data;
 }
 
 
 int
-llist_removeNode(LinkedList *llist, struct Node **p_node) {
-	struct Node *prev, *next, *node;
+llist_removeNode(LinkedList *llist, struct Node **cursor) {
+	struct Node *node;
 
 	assertList(llist);
-	if (!isUserPointerValid(p_node)) {
+	if (!isUserPointerValid(cursor)) {
 		return -1;
 	}
 
-	node = popNode(llist, *p_node);
-	assert(node == *p_node);
+	node = popNode(llist, *cursor);
+	assert(node == *cursor);
 
-	return destroyNode(llist->f_destroyNode, p_node);
+	return destroyNode(llist->f_destroyNode, cursor);
 }
 
 
@@ -403,7 +411,7 @@ llist_popHead(LinkedList *llist) {
 	if (llist == NULL) {
 		return NULL;
 	}
-	return llist_popNode(llist, &(llist->head));
+	return popHeadNode(llist);
 }
 
 
@@ -412,14 +420,12 @@ llist_popHead(LinkedList *llist) {
  */
 void *
 llist_popTail(LinkedList *llist) {
-	struct Node *node;
-
 	assertList(llist);
 
 	if (llist == NULL) {
 		return NULL;
 	}
-	return llist_popNode(llist, &(llist->tail));
+	return popTailNode(llist);
 }
 
 
@@ -504,9 +510,111 @@ llistCursor_find(LinkedList *llist, struct Node **cursor, void *data, LlistDirec
 }
 
 
+static void
+swapNodes(LinkedList *llist, struct Node *node1, struct Node *node2) {
+	int b_neighbours;
+	struct Node
+			*prev1,
+			*next1,
+			*prev2,
+			*next2;
+
+	assert(node1 != NULL && node2 != NULL);
+
+	/* If both nodes are next to each other, make sure
+	 * node1 refers to the first one */
+	if (node1->prev == node2) {
+		struct Node *tmp = node1;
+		node1 = node2;
+		node2 = tmp;
+	}
+
+	/* Sync test */
+	assert( ! ((node1->next == node2) ^ (node2->prev == node1)));
+
+
+	prev1 = node1->prev;
+	next1 = node1->next;
+	next2 = node2->next;
+	prev2 = node2->prev;
+
+	b_neighbours = (node1->next == node2);
+
+	if (prev1 != NULL) {
+		prev1->next = node2;
+	}
+	if (next2 != NULL) {
+		next2->prev = node1;
+	}
+
+	if (b_neighbours) {
+		node1->prev = node2;
+		node2->next = node1;
+
+	} else {
+		if (next1 != NULL) {
+			next1->prev = node2;
+		}
+		if (prev2 != NULL) {
+			prev2->next = node1;
+		}
+
+		node1->prev = prev2;
+		node2->next = next1;
+	}
+
+	node2->prev = prev1;
+	node1->next = next2;
+
+
+	if (llist->head == node1) {
+		llist->head = node2;
+	} else if (llist->head == node2) {
+		llist->head = node1;
+	}
+
+	if (llist->tail == node1) {
+		llist->tail = node2;
+	} else if (llist->tail == node2) {
+		llist->tail = node1;
+	}
+}
+
+
 int
-llist_simpleSort(LinkedList *llist) {
-	/* FIXME: Stub */
+llist_bubbleSort(LinkedList *llist) {
+	struct Node *node, *prev;
+
+	assertList(llist);
+
+	/* Already sorted */
+	if (llist->head == NULL || llist->head->next == NULL) {
+		return 0;
+	}
+
+	for (prev = llist->head, node = llist->head->next; node != NULL; prev = node, node = node->next) {
+		struct Node *lastSorted = NULL;
+
+		/* while node is not at the head of the list and prev is "higher" than node */
+		while (prev != NULL && llist->f_cmpNode(prev->data, node->data) > 0) {
+			swapNodes(llist, prev, node);
+			assert(prev->prev == node && node->next == prev);
+
+			/* prev is now after node */
+			if (lastSorted == NULL) {
+				lastSorted = prev;
+			}
+			/* update prev to be the new previous node (prev->prev before the swap) */
+			prev = node->prev;
+		}
+
+		if (lastSorted != NULL) {
+			node = lastSorted;
+			/* no need to update prev (since it will just get written to), but let's do it anyway */
+			prev = node->prev;
+		}
+	}
+
 	return 0;
 }
 
@@ -524,23 +632,6 @@ llist_getTailData(LinkedList *llist) {
 	assertList(llist);
 
 	return llist->tail->data;
-}
-
-
-void *
-llistCursor_getData(LinkedList *llist, struct Node **p_node) {
-	/* llist is not needed now, but for consistency and forward-compatibility,
-	 * it's probably better to require it anyway */
-	struct Node *node;
-	size_t i;
-
-	assertList(llist);
-	if (!isUserPointerValid(p_node)) {
-		return NULL;
-	}
-	node = *p_node;
-
-	return node->data;
 }
 
 
@@ -619,6 +710,39 @@ llistCursor_destroy(struct Node ***p_cursor) {
 }
 
 
+/* llist is not needed now, but for consistency and forward-compatibility,
+ * it's probably better to require it anyway */
+int
+llistCursor_setData(LinkedList *llist, struct Node **cursor, void *newData) {
+
+	assertList(llist);
+
+	if (!isUserPointerValid(cursor)) {
+		return -1;
+	}
+
+	(*cursor)->data = newData;
+	return 0;
+}
+
+
+/* llist is not needed now, but for consistency and forward-compatibility,
+ * it's probably better to require it anyway */
+void *
+llistCursor_getData(LinkedList *llist, struct Node **cursor) {
+	struct Node *node;
+
+	assertList(llist);
+
+	if (!isUserPointerValid(cursor)) {
+		return NULL;
+	}
+	node = *cursor;
+
+	return node->data;
+}
+
+
 int
 llistCursor_getHead(LinkedList *llist, struct Node **cursor) {
 	assertList(llist);
@@ -647,6 +771,7 @@ llistCursor_getTail(LinkedList *llist, struct Node **cursor) {
 
 int
 llistCursor_getPrev(LinkedList *llist, struct Node **cursor) {
+
 	if (!isUserPointerValid(cursor)) {
 		return -2;
 	}
@@ -661,6 +786,7 @@ llistCursor_getPrev(LinkedList *llist, struct Node **cursor) {
 
 int
 llistCursor_getNext(LinkedList *llist, struct Node **cursor) {
+
 	if (!isUserPointerValid(cursor)) {
 		return -2;
 	}

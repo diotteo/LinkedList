@@ -93,9 +93,15 @@ main(void) {
 	assert(llistCursor_getHead(llist, cursor) == 0);
 	printListFromCursor(llist, cursor);
 
-	assert(llistCursor_destroy(&cursor) == 0);
-	assert(llist_destroy(&llist) == 0);
+	{
+		int newVal = 15;
+		printf("Tail data = %d\n", *((int *)llistCursor_getData(llist, cursor)));
+		assert(0 == llistCursor_setData(llist, cursor, &newVal));
+		printf("Tail data should now be 15: %d\n", *((int *)llistCursor_getData(llist, cursor)));
 
+		assert(llistCursor_destroy(&cursor) == 0);
+		assert(llist_destroy(&llist) == 0);
+	}
 
 	return 0;
 }

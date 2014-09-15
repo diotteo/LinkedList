@@ -510,6 +510,23 @@ llistCursor_find(LinkedList *llist, struct Node **cursor, void *data, LlistDirec
 }
 
 
+static void
+swapNodes(struct Node *node1, struct Node *node2) {
+	struct Node *prev, *next;
+
+	assert(node1 != NULL && node2 != NULL);
+
+	prev = node1->prev;
+	next = node1->next;
+
+	node1->prev = node2->prev;
+	node1->next = node2->next;
+
+	node2->prev = prev;
+	node2->next = next;
+}
+
+
 int
 llist_simpleSort(LinkedList *llist) {
 	/* FIXME: Stub */

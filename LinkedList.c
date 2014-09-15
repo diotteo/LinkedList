@@ -368,36 +368,36 @@ llistCursor_insertData(LinkedList *llist, struct Node **cursor, void *data, Llis
 
 /* Caller is responsible of freeing the data returned */
 void *
-llist_popNode(LinkedList *llist, struct Node **p_node) {
+llist_popNode(LinkedList *llist, struct Node **cursor) {
 	void *data;
 	struct Node *node;
 
-	if (!isUserPointerValid(p_node)) {
+	if (!isUserPointerValid(cursor)) {
 		return NULL;
 	}
-	node = *p_node;
+	node = *cursor;
 
 	assert(node == popNode(llist, node));
 
 	data = node->data;
-	destroyNode(NULL, p_node);
+	destroyNode(NULL, cursor);
 	return data;
 }
 
 
 int
-llist_removeNode(LinkedList *llist, struct Node **p_node) {
+llist_removeNode(LinkedList *llist, struct Node **cursor) {
 	struct Node *node;
 
 	assertList(llist);
-	if (!isUserPointerValid(p_node)) {
+	if (!isUserPointerValid(cursor)) {
 		return -1;
 	}
 
-	node = popNode(llist, *p_node);
-	assert(node == *p_node);
+	node = popNode(llist, *cursor);
+	assert(node == *cursor);
 
-	return destroyNode(llist->f_destroyNode, p_node);
+	return destroyNode(llist->f_destroyNode, cursor);
 }
 
 
@@ -628,7 +628,7 @@ int
 llistCursor_getHead(LinkedList *llist, struct Node **cursor) {
 	assertList(llist);
 
-	if (cursor == NULL) {
+	if (!isUserPointerValid(cursor)) {
 		return -1;
 	}
 
@@ -641,7 +641,7 @@ int
 llistCursor_getTail(LinkedList *llist, struct Node **cursor) {
 	assertList(llist);
 
-	if (cursor == NULL) {
+	if (!isUserPointerValid(cursor)) {
 		return -1;
 	}
 

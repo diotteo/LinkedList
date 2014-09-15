@@ -2,3 +2,4 @@
 -Figure out how to navigate and read info pages
 -Read the info manual of gdb and figure out why it's being a PITA about not wanting to set the command history size from ~/.gdbinit
 -Add function documentation
+-Write a better Makefile

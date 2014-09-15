@@ -50,6 +50,9 @@ llistCursor_copy(LlistCursor *);
 int
 llistCursor_destroy(LlistCursor **p_cursor);
 
+int
+llistCursor_setData(LinkedList *llist, LlistCursor *cursor, void *newData);
+
 void *
 llistCursor_getData(LinkedList *llist, LlistCursor *cursor);
 
@@ -103,7 +106,7 @@ llist_getTailData(LinkedList *llist);
 
 /* === Mutator functions === */
 int
-llist_simpleSort(LinkedList *llist);
+llist_bubbleSort(LinkedList *llist);
 /* === END Mutator functions === */
 
 

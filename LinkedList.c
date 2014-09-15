@@ -693,7 +693,7 @@ int
 llistCursor_getHead(LinkedList *llist, struct Node **cursor) {
 	assertList(llist);
 
-	if (!isUserPointerValid(cursor)) {
+	if (cursor == NULL) {
 		return -1;
 	}
 
@@ -706,7 +706,7 @@ int
 llistCursor_getTail(LinkedList *llist, struct Node **cursor) {
 	assertList(llist);
 
-	if (!isUserPointerValid(cursor)) {
+	if (cursor == NULL) {
 		return -1;
 	}
 

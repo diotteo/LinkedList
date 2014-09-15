@@ -528,8 +528,39 @@ swapNodes(struct Node *node1, struct Node *node2) {
 
 
 int
-llist_simpleSort(LinkedList *llist) {
-	/* FIXME: Stub */
+llist_bubbleSort(LinkedList *llist) {
+	struct Node *node, *prev;
+
+	assertList(llist);
+
+	/* Already sorted */
+	if (llist->head == NULL || llist->head->next == NULL) {
+		return 0;
+	}
+
+	for (prev = llist->head, node = llist->head->next; node != NULL; prev = node, node = node->next) {
+		struct Node *lastSorted = NULL;
+
+		/* while node is not at the head of the list and prev is "higher" than node */
+		while (prev != NULL && llist->f_cmpNode(prev->data, node->data) > 0) {
+			swapNodes(prev, node);
+			assert(prev->prev == node && node->next == prev);
+
+			/* prev is now after node */
+			if (lastSorted == NULL) {
+				lastSorted = prev;
+			}
+			/* update prev to be the new previous node (prev->prev before the swap) */
+			prev = node->prev;
+		}
+
+		if (lastSorted != NULL) {
+			node = lastSorted;
+			/* no need to update prev (since it will just get written to), but let's do it anyway */
+			prev = node->prev;
+		}
+	}
+
 	return 0;
 }
 

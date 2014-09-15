@@ -22,25 +22,10 @@ addInt(int dataArray[], size_t *p_index, int data) {
 }
 
 
-
-int
-main(void) {
-	int testData[100] = { 0 };
-	size_t idx = 0;
+void
+printListFromCursor(LinkedList *llist, LlistCursor *cursor) {
 	int ret;
 
-	LinkedList *llist = llist_new(NULL, cmpFunc);
-	LlistCursor *cursor = llistCursor_new();
-
-	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 1)));
-	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 6)));
-	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 3)));
-	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 8)));
-	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 5)));
-	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 8)));
-
-	assert(llistCursor_getHead(llist, cursor) == 0);
-	assert(llistCursor_isHead(llist, cursor) == 0);
 	do {
 		void *p = llistCursor_getData(llist, cursor);
 		assert(p != NULL);
@@ -50,6 +35,28 @@ main(void) {
 		assert(ret > -2);
 	} while (ret == 0);
 	assert(ret == -1);
+}
+
+
+int
+main(void) {
+	int testData[100] = { 0 };
+	size_t idx = 0;
+
+	LinkedList *llist = llist_new(NULL, cmpFunc);
+	LlistCursor *cursor = llistCursor_new();
+
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 9)));
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 1)));
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 6)));
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 3)));
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 8)));
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 5)));
+	assert(0 == llist_insertTail(llist, addInt(testData, &idx, 8)));
+
+	assert(llistCursor_getHead(llist, cursor) == 0);
+	assert(llistCursor_isHead(llist, cursor) == 0);
+	printListFromCursor(llist, cursor);
 	assert(llistCursor_isTail(llist, cursor) == 0);
 
 	assert(llistCursor_getNext(llist, cursor) == -1);
@@ -80,6 +87,11 @@ main(void) {
 		assert(llist_countMatch(llist, &nb) == 2);
 		printf("2 occurences of '8' in list\n");
 	}
+
+	printf("It's bubblesort time!\n");
+	llist_bubbleSort(llist);
+	assert(llistCursor_getHead(llist, cursor) == 0);
+	printListFromCursor(llist, cursor);
 
 	assert(llistCursor_destroy(&cursor) == 0);
 	assert(llist_destroy(&llist) == 0);

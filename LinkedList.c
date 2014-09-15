@@ -45,6 +45,12 @@ assertList(LinkedList *llist) {
 }
 
 
+static int
+isUserPointerValid(struct Node **cursor) {
+	return (cursor != NULL && *cursor != NULL);
+}
+
+
 static struct Node *
 new_node(void *data) {
 	struct Node *node = malloc(sizeof (*node));
@@ -72,12 +78,6 @@ destroyNode(nodeDestroyFunc f_destroyNode, struct Node **p_node) {
 	free(node), *p_node = node = NULL;
 
 	return destroyCode;
-}
-
-
-static int
-isUserPointerValid(struct Node **p_node) {
-	return (p_node != NULL && *p_node != NULL);
 }
 
 

@@ -278,11 +278,14 @@ llist_new(nodeDestroyFunc f_destroyNode, nodeCmpFunc f_cmpNode) {
 int
 llist_destroy(LinkedList **p_llist) {
 	struct Node *node;
-	struct Node *next = NULL;
 	int error = 0;
 	LinkedList *llist;
 
-	assertList(llist);
+	if (p_llist == NULL) {
+		return 0;
+	}
+
+	assertList(*p_llist);
 
 	llist = *p_llist;
 	while (llist->head != NULL) {
@@ -334,14 +337,15 @@ llistCursor_isHead(LinkedList *llist, struct Node **cursor) {
 /* Returns 0 on success, negative number on failure */
 int
 llist_insertHead(LinkedList *llist, void *data) {
-	return insertNode(llist, &(llist->head), new_node(data), LLIST_BEFORE);
+
+	return insertHead(llist, new_node(data));
 }
 
 
 /* Returns 0 on success, negative number on failure */
 int
 llist_insertTail(LinkedList *llist, void *data) {
-	return insertNode(llist, &(llist->tail), new_node(data), LLIST_AFTER);
+	return insertTail(llist, new_node(data));
 }
 
 
@@ -379,7 +383,7 @@ llist_popNode(LinkedList *llist, struct Node **p_node) {
 
 int
 llist_removeNode(LinkedList *llist, struct Node **p_node) {
-	struct Node *prev, *next, *node;
+	struct Node *node;
 
 	assertList(llist);
 	if (!isUserPointerValid(p_node)) {
@@ -403,7 +407,7 @@ llist_popHead(LinkedList *llist) {
 	if (llist == NULL) {
 		return NULL;
 	}
-	return llist_popNode(llist, &(llist->head));
+	return popHeadNode(llist);
 }
 
 
@@ -412,14 +416,12 @@ llist_popHead(LinkedList *llist) {
  */
 void *
 llist_popTail(LinkedList *llist) {
-	struct Node *node;
-
 	assertList(llist);
 
 	if (llist == NULL) {
 		return NULL;
 	}
-	return llist_popNode(llist, &(llist->tail));
+	return popTailNode(llist);
 }
 
 
@@ -532,7 +534,6 @@ llistCursor_getData(LinkedList *llist, struct Node **p_node) {
 	/* llist is not needed now, but for consistency and forward-compatibility,
 	 * it's probably better to require it anyway */
 	struct Node *node;
-	size_t i;
 
 	assertList(llist);
 	if (!isUserPointerValid(p_node)) {
@@ -647,6 +648,7 @@ llistCursor_getTail(LinkedList *llist, struct Node **cursor) {
 
 int
 llistCursor_getPrev(LinkedList *llist, struct Node **cursor) {
+
 	if (!isUserPointerValid(cursor)) {
 		return -2;
 	}
@@ -661,6 +663,7 @@ llistCursor_getPrev(LinkedList *llist, struct Node **cursor) {
 
 int
 llistCursor_getNext(LinkedList *llist, struct Node **cursor) {
+
 	if (!isUserPointerValid(cursor)) {
 		return -2;
 	}

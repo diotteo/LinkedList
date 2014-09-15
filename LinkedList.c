@@ -581,22 +581,6 @@ llist_getTailData(LinkedList *llist) {
 }
 
 
-void *
-llistCursor_getData(LinkedList *llist, struct Node **p_node) {
-	/* llist is not needed now, but for consistency and forward-compatibility,
-	 * it's probably better to require it anyway */
-	struct Node *node;
-
-	assertList(llist);
-	if (!isUserPointerValid(p_node)) {
-		return NULL;
-	}
-	node = *p_node;
-
-	return node->data;
-}
-
-
 /* === Cursor functions === */
 /* We can't return Nodes to the user, that would be ABI dependant.
  * We can't return pointers to Nodes, because we can't set the user pointer to NULL when we free Nodes
@@ -669,6 +653,39 @@ llistCursor_destroy(struct Node ***p_cursor) {
 		return 0;
 	}
 	return -1;
+}
+
+
+/* llist is not needed now, but for consistency and forward-compatibility,
+ * it's probably better to require it anyway */
+int
+llistCursor_setData(LinkedList *llist, struct Node **cursor, void *newData) {
+
+	assertList(llist);
+
+	if (!isUserPointerValid(cursor)) {
+		return -1;
+	}
+
+	(*cursor)->data = newData;
+	return 0;
+}
+
+
+/* llist is not needed now, but for consistency and forward-compatibility,
+ * it's probably better to require it anyway */
+void *
+llistCursor_getData(LinkedList *llist, struct Node **cursor) {
+	struct Node *node;
+
+	assertList(llist);
+
+	if (!isUserPointerValid(cursor)) {
+		return NULL;
+	}
+	node = *cursor;
+
+	return node->data;
 }
 
 

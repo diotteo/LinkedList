@@ -82,10 +82,13 @@ main(void) {
 
 		nb = 3;
 		assert(llist_countMatch(llist, &nb) == 1);
-		printf("1 occurence of '3' in list\n");
+		printf("1 occurence of '%d' in list\n", nb);
 		nb = 8;
 		assert(llist_countMatch(llist, &nb) == 2);
-		printf("2 occurences of '8' in list\n");
+		printf("2 occurences of '%d' in list\n", nb);
+		nb = 4;
+		assert(llist_countMatch(llist, &nb) == 0);
+		printf("0 occurences of '%d' in list\n", nb);
 	}
 
 	printf("It's bubblesort time!\n");
@@ -95,9 +98,12 @@ main(void) {
 
 	{
 		int newVal = 15;
-		printf("Tail data = %d\n", *((int *)llistCursor_getData(llist, cursor)));
+		assert(9 == *((int *)llistCursor_getData(llist, cursor)));
 		assert(0 == llistCursor_setData(llist, cursor, &newVal));
-		printf("Tail data should now be 15: %d\n", *((int *)llistCursor_getData(llist, cursor)));
+		assert(15 == *((int *)llistCursor_getData(llist, cursor)));
+
+		assert(1 == *((int *)llist_getHeadData(llist)));
+		assert(15 == *((int *)llist_getTailData(llist)));
 
 		assert(llistCursor_destroy(&cursor) == 0);
 		assert(llist_destroy(&llist) == 0);

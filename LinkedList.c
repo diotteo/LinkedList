@@ -581,9 +581,66 @@ llistCursor_find(LinkedList *llist, struct Node **cursor, void *data, LlistDirec
 }
 
 
+/* Based on http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html */
+int
+llist_mergeSort(LinkedList *llist) {
+	struct Node **l, *p, *q;
+	size_t psize, qsize, k, nbMerge;
 
+	assertList(llist);
 
+	k = 1;
+	l = NULL;
+	do {
+		p = llist->head;
+		for (nbMerge =0; p != NULL; nbMerge++) {
+			for (psize = 0, q = p; q != NULL && psize < k; q = q->next, psize++);
 
+			qsize = k;
+
+			while (psize > 0 || (qsize > 0 && q != NULL)) {
+				struct Node *n;
+				if (p == NULL) {
+					n = q;
+					q = q->next;
+					qsize--;
+				} else if (q == NULL) {
+					n = p;
+					p = p->next;
+					psize--;
+				} else {
+					if (llist->f_cmpNode(p->data, q->data) > 0) {
+						n = q;
+						q = q->next;
+						qsize--;
+					} else {
+						n = p;
+						p = p->next;
+						psize--;
+					}
+				}
+
+				if (l == NULL) {
+					llist->head = n;
+					n->prev = NULL;
+					l = n;
+				} else {
+					l->next = n;
+					n->prev = l;
+				}
+				/* bug if n == p, fuck */
+				n->next = p;
+				if (p != NULL) {
+					/* bug if n == p, fuck */
+					p->prev = n;
+				}
+			}
+		}
+		k *= 2;
+	} while (nbMerge > 1);
+
+	return 0;
+}
 
 
 int
